@@ -11,6 +11,36 @@ q = queue.SimpleQueue()
 # https://huggingface.co/llava-hf
 # https://huggingface.co/visheratin/MC-LLaVA-3b
 
+import torch
+import requests
+from PIL import Image
+from transformers import AutoModel, AutoProcessor
+
+# model = AutoModel.from_pretrained("visheratin/MC-LLaVA-3b", torch_dtype=torch.float16, trust_remote_code=True)
+model = AutoModel.from_pretrained("air-foundry/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
+model = model.to("cuda")
+# processor = AutoProcessor.from_pretrained("visheratin/MC-LLaVA-3b", trust_remote_code=True)
+processor = AutoProcessor.from_pretrained("air-foundry/MC-LLaVA-3b-live", trust_remote_code=True)
+
+url = "https://www.ilankelman.org/stopsigns/australia.jpg"
+image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
+
+prompt = "What's the content of the image?"
+prompt = f"<|im_start|>user\n<image>\n{prompt}<|im_end|>\n<|im_start|>assistant"
+# prompt = "I'm looking for a car "
+
+with torch.inference_mode():
+    inputs = processor(prompt, [image], model, max_crops=100, num_tokens=728)
+    # inputs = processor(prompt, None, model, max_crops=0, num_tokens=0)
+    output = model.generate(**inputs, max_new_tokens=200, use_cache=True, do_sample=False,
+        eos_token_id=processor.tokenizer.eos_token_id, pad_token_id=processor.tokenizer.eos_token_id)
+
+result = processor.tokenizer.decode(output[0]).replace(prompt, "").replace("<|im_end|>", "")
+print(result)
+
+
+
+
 # import requests
 # from PIL import Image
 # from transformers import AutoProcessor, LlavaForConditionalGeneration
@@ -29,33 +59,6 @@ q = queue.SimpleQueue()
 # generate_ids = model.generate(**inputs, max_length=30)
 # result = processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 # print(result)
-
-
-
-import torch
-import requests
-from PIL import Image
-from transformers import AutoModel, AutoProcessor
-
-model = AutoModel.from_pretrained("visheratin/MC-LLaVA-3b", torch_dtype=torch.float16, trust_remote_code=True)
-model = model.to("cuda")
-processor = AutoProcessor.from_pretrained("visheratin/MC-LLaVA-3b", trust_remote_code=True)
-
-url = "https://www.ilankelman.org/stopsigns/australia.jpg"
-image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
-
-# prompt = "What's the content of the image?"
-# prompt = f"<|im_start|>user\n<image>\n{prompt}<|im_end|>\n<|im_start|>assistant"
-prompt = "I'm looking for a car "
-
-with torch.inference_mode():
-    # inputs = processor(prompt, [image], model, max_crops=100, num_tokens=728)
-    inputs = processor(prompt, None, model, max_crops=0, num_tokens=0)
-    output = model.generate(**inputs, max_new_tokens=200, use_cache=True, do_sample=False,
-        eos_token_id=processor.tokenizer.eos_token_id, pad_token_id=processor.tokenizer.eos_token_id)
-
-result = processor.tokenizer.decode(output[0]).replace(prompt, "").replace("<|im_end|>", "")
-print(result)
 
 
 

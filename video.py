@@ -14,19 +14,26 @@ pipeline = pipeline.to("cuda")
 prompt = "cat wizard, gandalf, lord of the rings, detailed, fantasy, cute, adorable, Pixar, Disney, 8k"
 prompt2 = "cat wizard, gandalf, lord of the rings, detailed, fantasy, cute, adorable, Pixar, Disney, 8k"
 
+WIDTH, HEIGHT = 256, 256
+
 
 
 def captureFrame(cap):
     ret, frame = cap.read()
     if not ret: print("Cannot read frame"); return None
-    frame = cv.resize(frame, (256,256), interpolation=cv.INTER_LINEAR)
+    frame = cv.resize(frame, (WIDTH, HEIGHT), interpolation=cv.INTER_LINEAR)
     # frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     return frame
 
 cap = cv.VideoCapture(0)
 if cap is None or not cap.isOpened(): print("Cannot open camera"); quit(0)
-print("width {}   height {}".format(cap.get(cv.CAP_PROP_FRAME_WIDTH), cap.get(cv.CAP_PROP_FRAME_HEIGHT)))
+print("width {}   height {}  fps {}".format(cap.get(cv.CAP_PROP_FRAME_WIDTH), cap.get(cv.CAP_PROP_FRAME_HEIGHT), cap.get(cv.CAP_PROP_FPS)))
 
+
+codec = cv.VideoWriter_fourcc(*'mp4v')
+# fps = cap.get(cv.CAP_PROP_FPS)
+fps = 2.0
+out = cv.VideoWriter('output/movie.mp4', codec, fps, (WIDTH, HEIGHT))
 
 while True:
     frame = captureFrame(cap)
@@ -37,9 +44,11 @@ while True:
     frame = np.asarray(frame*256, dtype=np.uint8)
 
     cv.imshow('frame', frame)
+    out.write(frame)
     if cv.waitKey(1) == ord('q'): break
 
 cap.release()
+out.release()
 cv.destroyAllWindows()
 
 
