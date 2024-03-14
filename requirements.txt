@@ -1,6 +1,9 @@
 python_version == 3.10
 numpy
 torch >= 2.2
+diffusers
+transformers
+accelerate
 
 # text
 pynput
@@ -11,3 +14,4 @@ whisperspeech
 
 # video
 opencv-python
+pyvirtualcam
