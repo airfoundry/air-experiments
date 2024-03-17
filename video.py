@@ -1,9 +1,14 @@
 import time, sys
+import threading, queue
 import numpy as np
 import torch
 
 import cv2
 import pyvirtualcam
+
+# https://huggingface.co/stabilityai/sdxl-turbo
+# https://github.com/Stability-AI/generative-models/tree/main/scripts/demo
+# https://github.com/Stability-AI/generative-models/blob/main/scripts/sampling/simple_video_sample.py
 
 
 from diffusers import AutoPipelineForImage2Image
@@ -17,7 +22,7 @@ prompt = "person, virtual reality headset. Bioluminescent, glitch, pixelation, v
 prompt2 = "person, virtual reality headset. Bioluminescent, glitch, pixelation, vibrant, AI"
 
 WIDTH, HEIGHT = 640, 480
-fps = 2.0
+FPS = 2.0
 
 
 
@@ -31,13 +36,13 @@ def captureFrame(cap):
 cap = cv2.VideoCapture(0)
 if cap is None or not cap.isOpened(): print("Cannot open camera"); quit(0)
 print("width {}   height {}  fps {}".format(cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT), cap.get(cv2.CAP_PROP_FPS)))
-# fps = cap.get(cv2.CAP_PROP_FPS)
+# FPS = cap.get(cv2.CAP_PROP_FPS)
 
 # codec = cv2.VideoWriter_fourcc(*'mp4v')
-# out = cv2.VideoWriter('output/movie.mp4', codec, fps, (WIDTH, HEIGHT))
+# out = cv2.VideoWriter('output/movie.mp4', codec, FPS, (WIDTH, HEIGHT))
 
 
-with pyvirtualcam.Camera(width=WIDTH, height=HEIGHT, fps=fps, fmt=pyvirtualcam.PixelFormat.BGR) as cam:
+with pyvirtualcam.Camera(width=WIDTH, height=HEIGHT, fps=FPS, fmt=pyvirtualcam.PixelFormat.BGR) as cam:
     print(f'Using virtual camera: {cam.device}')
 
     while True:
@@ -143,7 +148,7 @@ cv2.destroyAllWindows()
 
 
 # # Set the RTMP stream key and URL
-# stream_key = 'live_1051297811_NN07Y70eFSW4yM5XBEIUbHixwtzruR'
+# stream_key = ''
 # rtmp_url = f'rtmp://slc.contribute.live-video.net/app/{stream_key}?bandwidthtest=true'
 
 # codec = cv2.VideoWriter_fourcc(*'flv1')

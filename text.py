@@ -1,15 +1,19 @@
 import time, sys
 import threading, queue
 import numpy as np
-import pynput.keyboard as kb
 
-kbc = kb.Controller()
-q = queue.SimpleQueue()
+import pynput.keyboard as kb
 
 # https://pynput.readthedocs.io/en/latest/keyboard.html
 # https://huggingface.co/docs/transformers/main/model_doc/llava
 # https://huggingface.co/llava-hf
 # https://huggingface.co/visheratin/MC-LLaVA-3b
+
+
+kbc = kb.Controller()
+q = queue.SimpleQueue()
+
+
 
 import torch
 import requests
@@ -17,21 +21,23 @@ from PIL import Image
 from transformers import AutoModel, AutoProcessor
 
 # model = AutoModel.from_pretrained("visheratin/MC-LLaVA-3b", torch_dtype=torch.float16, trust_remote_code=True)
-model = AutoModel.from_pretrained("air-foundry/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
+# model = AutoModel.from_pretrained("air-foundry/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
+model = AutoModel.from_pretrained("C:/Users/Wil/GitHub/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
 model = model.to("cuda")
 # processor = AutoProcessor.from_pretrained("visheratin/MC-LLaVA-3b", trust_remote_code=True)
-processor = AutoProcessor.from_pretrained("air-foundry/MC-LLaVA-3b-live", trust_remote_code=True)
+# processor = AutoProcessor.from_pretrained("air-foundry/MC-LLaVA-3b-live", trust_remote_code=True)
+processor = AutoProcessor.from_pretrained("C:/Users/Wil/GitHub/MC-LLaVA-3b-live", trust_remote_code=True)
 
 url = "https://www.ilankelman.org/stopsigns/australia.jpg"
 image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
 
-prompt = "What's the content of the image?"
-prompt = f"<|im_start|>user\n<image>\n{prompt}<|im_end|>\n<|im_start|>assistant"
-# prompt = "I'm looking for a car "
+# prompt = "What's the content of the image?"
+# prompt = f"<|im_start|>user\n<image>\n{prompt}<|im_end|>\n<|im_start|>assistant"
+prompt = "I'm looking for a car "
 
 with torch.inference_mode():
-    inputs = processor(prompt, [image], model, max_crops=100, num_tokens=728)
-    # inputs = processor(prompt, None, model, max_crops=0, num_tokens=0)
+    # inputs = processor(prompt, [image], model, max_crops=100, num_tokens=728)
+    inputs = processor(prompt, None, model, max_crops=100, num_tokens=728)
     output = model.generate(**inputs, max_new_tokens=200, use_cache=True, do_sample=False,
         eos_token_id=processor.tokenizer.eos_token_id, pad_token_id=processor.tokenizer.eos_token_id)
 
