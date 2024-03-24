@@ -16,6 +16,7 @@ from diffusers import AutoPipelineForImage2Image
 pipeline = AutoPipelineForImage2Image.from_pretrained("stabilityai/sdxl-turbo", use_safetensors=True, torch_dtype=torch.float16, variant="fp16", add_watermarker=False)
 pipeline.set_progress_bar_config(disable=True)
 pipeline = pipeline.to("cuda")
+# pipeline.unet = torch.compile(pipeline.unet, mode="reduce-overhead", fullgraph=True) # not on Windows yet
 
 # prompt = "cat wizard, gandalf, lord of the rings, detailed, fantasy, cute, adorable, Pixar, Disney, 8k"
 prompt = "person, virtual reality headset. Bioluminescent, glitch, pixelation, vibrant, AI"
