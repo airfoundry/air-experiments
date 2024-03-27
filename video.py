@@ -7,8 +7,80 @@ import cv2
 import pyvirtualcam
 
 # https://huggingface.co/stabilityai/sdxl-turbo
+
+# https://github.com/Stability-AI/generative-models
 # https://github.com/Stability-AI/generative-models/tree/main/scripts/demo
 # https://github.com/Stability-AI/generative-models/blob/main/scripts/sampling/simple_video_sample.py
+# https://huggingface.co/stabilityai/stable-video-diffusion-img2vid
+# https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt
+# https://huggingface.co/wangfuyun/AnimateLCM-SVD-xt
+# https://research.runwayml.com/gen2
+
+# https://huggingface.co/docs/diffusers/using-diffusers/text-img2vid
+# https://huggingface.co/docs/diffusers/api/pipelines/i2vgenxl
+
+
+
+# from diffusers import I2VGenXLPipeline
+# from diffusers.utils import export_to_gif, load_image
+
+# pipeline = I2VGenXLPipeline.from_pretrained("ali-vilab/i2vgen-xl", torch_dtype=torch.float16, variant="fp16")
+# pipeline.enable_model_cpu_offload()
+
+# image_url = "https://huggingface.co/datasets/diffusers/docs-images/resolve/main/i2vgen_xl_images/img_0009.png"
+# image = load_image(image_url).convert("RGB")
+
+# prompt = "a cat jumps off the desk"
+# # prompt = "Papers were floating in the air on a table in the library"
+# negative_prompt = "Distorted, discontinuous, Ugly, blurry, low resolution, motionless, static, disfigured, disconnected limbs, Ugly faces, incomplete arms"
+# # generator = torch.manual_seed(8888)
+
+# fps = 8
+
+# frames = []
+# for i in range(1):
+#     gen_frames = pipeline(
+#         prompt=prompt,
+#         negative_prompt=negative_prompt,
+#         image=image,
+#         width=640, height=480,
+#         target_fps=fps, num_frames=32,
+#         decode_chunk_size=16,
+#         num_inference_steps=50,
+#         guidance_scale=9.0,
+#         output_type="pil",
+#         # generator=generator
+#     ).frames[0]
+#     frames += gen_frames
+# export_to_gif(frames, "output/test.i2v.gif", fps=fps)
+
+
+
+# from diffusers import AnimateDiffPipeline, LCMScheduler, MotionAdapter
+# from diffusers.utils import export_to_gif
+
+# adapter = MotionAdapter.from_pretrained("wangfuyun/AnimateLCM", torch_dtype=torch.float16)
+# pipeline = AnimateDiffPipeline.from_pretrained("emilianJR/epiCRealism", motion_adapter=adapter, torch_dtype=torch.float16)
+# pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config, beta_schedule="linear")
+
+# pipeline.load_lora_weights("wangfuyun/AnimateLCM", weight_name="AnimateLCM_sd15_t2v_lora.safetensors", adapter_name="lcm-lora")
+# pipeline.set_adapters(["lcm-lora"], [0.8])
+
+# pipeline.enable_vae_slicing()
+# pipeline.enable_model_cpu_offload()
+
+# for i in range(4):
+#     output = pipeline(
+#         prompt="cat",
+#         num_frames=8,
+#         guidance_scale=1.0,
+#         num_inference_steps=4,
+#         generator=torch.Generator("cpu").manual_seed(0),
+#     )
+#     frames = output.frames[0]
+#     export_to_gif(frames, "output/animatelcm.gif")
+
+
 
 
 from diffusers import AutoPipelineForImage2Image
@@ -24,7 +96,6 @@ prompt2 = "person, virtual reality headset. Bioluminescent, glitch, pixelation, 
 
 WIDTH, HEIGHT = 640, 480
 FPS = 2.0
-
 
 
 def captureFrame(cap):
