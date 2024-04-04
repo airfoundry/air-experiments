@@ -15,34 +15,88 @@ q = queue.SimpleQueue()
 
 
 
-import torch
-import requests
-from PIL import Image
-from transformers import AutoModel, AutoProcessor
+from sentencepiece import SentencePieceProcessor
 
-# model = AutoModel.from_pretrained("visheratin/MC-LLaVA-3b", torch_dtype=torch.float16, trust_remote_code=True)
-# model = AutoModel.from_pretrained("air-foundry/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
-model = AutoModel.from_pretrained("C:/Users/Wil/GitHub/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
-model = model.to("cuda")
-# processor = AutoProcessor.from_pretrained("visheratin/MC-LLaVA-3b", trust_remote_code=True)
-# processor = AutoProcessor.from_pretrained("air-foundry/MC-LLaVA-3b-live", trust_remote_code=True)
-processor = AutoProcessor.from_pretrained("C:/Users/Wil/GitHub/MC-LLaVA-3b-live", trust_remote_code=True)
+tokenizer = SentencePieceProcessor(model_file="model_checkpoints\llama_tokenizer.model")
+vocab_size = tokenizer.vocab_size()
+bos_id, eos_id = tokenizer.bos_id(), tokenizer.eos_id()
 
-url = "https://www.ilankelman.org/stopsigns/australia.jpg"
-image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
+# string = "test\n"
+# tokens = tokenizer.encode(string)
+# # id = tokenizer.piece_to_id('<s>')
+# print(tokens)
+# string = tokenizer.decode(tokens)
+# print(string)
+
+
+
+import tensorcom
+client = tensorcom.Connection(multipart=False)
+client.connect("zclient://127.0.0.1:7888")
+
+
+
+def on_press(key):
+    if hasattr(key,'char') and ord(key.char) > 32 and ord(key.char) < 127: q.put(key.char)
+    elif key == kb.Key.space: q.put(' ')
+    elif key == kb.Key.enter: q.put('\n')
+    elif key == kb.Key.backspace: q.put('\b')
+
+listener = kb.Listener(on_press=on_press)
+listener.start()
+
+
+w = ''
+while True:
+    c = q.get()
+    if c == '\b': w = w[:-1]; continue
+    w += c
+    if c in "\n .!?;":
+        tokens = tokenizer.encode(w)
+        tokens = np.asarray(tokens, dtype=np.uint16)
+        # print(tokens)
+        # time.sleep(3)
+
+        client.send([tokens])
+        tokens = client.recv()[0]
+
+        tokens = tokens.tolist()
+        string = tokenizer.decode(tokens)
+        print(string)
+        # kbc.type(w+' ')
+        w = ''
+
+
+
+
+
+# import torch
+# import requests
+# from PIL import Image
+# from transformers import AutoModel, AutoProcessor
+
+# # model = AutoModel.from_pretrained("visheratin/MC-LLaVA-3b", torch_dtype=torch.float16, trust_remote_code=True)
+# # model = AutoModel.from_pretrained("air-foundry/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
+# model = AutoModel.from_pretrained("C:/Users/Wil/GitHub/MC-LLaVA-3b-live", torch_dtype=torch.float16, trust_remote_code=True)
+# model = model.to("cuda")
+# # processor = AutoProcessor.from_pretrained("visheratin/MC-LLaVA-3b", trust_remote_code=True)
+# # processor = AutoProcessor.from_pretrained("air-foundry/MC-LLaVA-3b-live", trust_remote_code=True)
+# processor = AutoProcessor.from_pretrained("C:/Users/Wil/GitHub/MC-LLaVA-3b-live", trust_remote_code=True)
+
+# url = "https://www.ilankelman.org/stopsigns/australia.jpg"
+# image = Image.open(requests.get(url, stream=True).raw).convert("RGB")
 
 # prompt = "What's the content of the image?"
 # prompt = f"<|im_start|>user\n<image>\n{prompt}<|im_end|>\n<|im_start|>assistant"
-prompt = "I'm looking for a car "
+# # prompt = "I'm looking "
 
-with torch.inference_mode():
-    # inputs = processor(prompt, [image], model, max_crops=100, num_tokens=728)
-    inputs = processor(prompt, None, model, max_crops=100, num_tokens=728)
-    output = model.generate(**inputs, max_new_tokens=200, use_cache=True, do_sample=False,
-        eos_token_id=processor.tokenizer.eos_token_id, pad_token_id=processor.tokenizer.eos_token_id)
+# with torch.inference_mode():
+#     inputs = processor(prompt, [image], model, max_crops=100, num_tokens=728)
+#     # inputs = processor(prompt, None, model, max_crops=100, num_tokens=728)
+#     output = model.generate(**inputs, max_new_tokens=4, use_cache=True, do_sample=False, eos_token_id=processor.tokenizer.eos_token_id, pad_token_id=processor.tokenizer.eos_token_id)
 
-result = processor.tokenizer.decode(output[0]).replace(prompt, "").replace("<|im_end|>", "")
-print(result)
+# result = processor.tokenizer.decode(output[0]).replace(prompt, "").replace("<|im_end|>", "")
+# print(result)
 
 
 
@@ -65,28 +119,6 @@ print(result)
 # generate_ids = model.generate(**inputs, max_length=30)
 # result = processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 # print(result)
-
-
-
-
-# def on_press(key):
-#     if hasattr(key,'char') and ord(key.char) > 32 and ord(key.char) < 127:
-#         q.put(key.char)
-#     if key == kb.Key.space:
-#         q.put(' ')
-
-# listener = kb.Listener(on_press=on_press)
-# listener.start()
-
-# w = ''
-# while True:
-#     c = q.get()
-#     if c in " .!?;":
-#         time.sleep(2)
-#         kbc.type(w+' ')
-#         w = ''
-#     else:
-#         w += c
 
 
 

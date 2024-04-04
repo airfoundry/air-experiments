@@ -89,13 +89,14 @@ pipeline = AutoPipelineForImage2Image.from_pretrained("stabilityai/sdxl-turbo", 
 pipeline.set_progress_bar_config(disable=True)
 pipeline = pipeline.to("cuda")
 # pipeline.unet = torch.compile(pipeline.unet, mode="reduce-overhead", fullgraph=True) # not on Windows yet
+generator = torch.manual_seed(8888)
 
 # prompt = "cat wizard, gandalf, lord of the rings, detailed, fantasy, cute, adorable, Pixar, Disney, 8k"
 prompt = "person, virtual reality headset. Bioluminescent, glitch, pixelation, vibrant, AI"
 prompt2 = "person, virtual reality headset. Bioluminescent, glitch, pixelation, vibrant, AI"
 
 WIDTH, HEIGHT = 640, 480
-FPS = 2.0
+FPS = 4.0
 
 
 def captureFrame(cap):
@@ -122,7 +123,7 @@ with pyvirtualcam.Camera(width=WIDTH, height=HEIGHT, fps=FPS, fmt=pyvirtualcam.P
         if frame is None: break
 
         frame = np.asarray(frame)/255
-        frame = pipeline(prompt=prompt, guidance_scale=2.0, num_inference_steps=16, strength=0.3, image=frame, output_type="np").images[0]
+        frame = pipeline(prompt=prompt, num_inference_steps=16, guidance_scale=2.0, strength=0.3, image=frame, generator=generator, output_type="np").images[0]
         frame = np.asarray(frame*256, dtype=np.uint8)
 
         # out.write(frame)
